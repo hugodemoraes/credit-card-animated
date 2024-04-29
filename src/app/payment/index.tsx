@@ -5,11 +5,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CARD_SIDE, CreditCard } from "@/components/credit-card";
 import { Input } from "@/components/input";
+import { creditCardApplyMask, validateApplyMask } from "@/utils/masks";
 
 import { styles } from "./styles";
 
 export function Payment() {
   const cardSide = useSharedValue(CARD_SIDE.front);
+  const [buttonText, setButtonText] = useState("Mostrar verso");
   const [name, setName] = useState("");
   const [number, setNumber] = useState("");
   const [date, setDate] = useState("");
@@ -25,9 +27,11 @@ export function Payment() {
 
   function handleFlipCard() {
     if (cardSide.value === CARD_SIDE.front) {
-      cardSide.value = CARD_SIDE.back;
+      showBackCard();
+      setButtonText("Mostrar frente");
     } else {
-      cardSide.value = CARD_SIDE.front;
+      showFrontCard();
+      setButtonText("Mostrar verso");
     }
   }
 
@@ -38,14 +42,14 @@ export function Payment() {
           cardSide={cardSide}
           data={{
             name,
-            number: number.replace(/(\d{4})(?=\d)/g, "$1 "),
-            date: date.replace(/(\d{2})(?=\d)/g, "$1/"),
+            number,
+            date,
             code,
           }}
         />
 
         <TouchableOpacity style={styles.button} onPress={handleFlipCard}>
-          <Text>Inverter</Text>
+          <Text>{buttonText}</Text>
         </TouchableOpacity>
 
         <View style={styles.form}>
@@ -58,8 +62,9 @@ export function Payment() {
           <Input
             placeholder="Número do cartão"
             keyboardType="numeric"
-            maxLength={16}
-            onChangeText={setNumber}
+            maxLength={19}
+            value={number}
+            onChangeText={(value) => setNumber(creditCardApplyMask(value))}
             onFocus={showBackCard}
           />
 
@@ -67,9 +72,10 @@ export function Payment() {
             <Input
               placeholder="01/02"
               keyboardType="numeric"
-              maxLength={4}
+              maxLength={5}
+              value={date}
               style={styles.small}
-              onChangeText={setDate}
+              onChangeText={(value) => setDate(validateApplyMask(value))}
               onFocus={showBackCard}
             />
             <Input
